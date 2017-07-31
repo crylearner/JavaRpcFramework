@@ -4,7 +4,7 @@ package rpc.listener;
 import org.json.JSONObject;
 
 import rpc.framework.INotificationListener;
-import rpc.json.RpcNotification;
+import rpc.json.message.RpcNotification;
 import rpc.util.RpcTools;
 
 

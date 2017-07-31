@@ -1,4 +1,4 @@
-package rpc.json;
+package rpc.json.message;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;

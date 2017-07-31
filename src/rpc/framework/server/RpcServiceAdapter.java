@@ -6,8 +6,8 @@ import java.lang.reflect.Parameter;
 
 import org.json.JSONArray;
 
-import rpc.json.RpcRequest;
-import rpc.json.RpcResponse;
+import rpc.json.message.RpcRequest;
+import rpc.json.message.RpcResponse;
 import rpc.util.RpcLog;
 
 public final class RpcServiceAdapter implements RpcServiceInterface {

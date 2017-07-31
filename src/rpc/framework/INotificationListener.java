@@ -1,6 +1,6 @@
 package rpc.framework;
 
-import rpc.json.RpcNotification;
+import rpc.json.message.RpcNotification;
 
 
 public interface INotificationListener {

@@ -4,8 +4,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import rpc.framework.server.RpcServiceInterface;
-import rpc.json.RpcRequest;
-import rpc.json.RpcResponse;
+import rpc.json.message.RpcRequest;
+import rpc.json.message.RpcResponse;
 import rpc.util.RpcLog;
 
 public class Client implements RpcServiceInterface{

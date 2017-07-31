@@ -6,9 +6,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import rpc.framework.connection.IRpcChannel;
 import rpc.framework.message.RpcMessage;
-import rpc.json.RpcPackage;
-import rpc.json.RpcPackageAssembly;
-import rpc.json.RpcRequest;
+import rpc.json.message.RpcPackage;
+import rpc.json.message.RpcPackageAssembly;
+import rpc.json.message.RpcRequest;
 import rpc.util.RpcLog;
 import rpc.util.RpcTools;
 

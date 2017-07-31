@@ -4,8 +4,8 @@ import rpc.component.RpcComponent;
 import rpc.framework.INotificationListener;
 import rpc.framework.IResultListener;
 import rpc.framework.connection.IRpcChannel;
-import rpc.json.RpcRequest;
-import rpc.json.RpcResponse;
+import rpc.json.message.RpcRequest;
+import rpc.json.message.RpcResponse;
 
 
 public interface IRpcClientSession {

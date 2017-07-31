@@ -11,8 +11,8 @@ import rpc.framework.connection.IRpcChannel;
 import rpc.framework.connection.RpcConnector;
 import rpc.framework.service.Client;
 import rpc.framework.service.MPTFacade;
-import rpc.json.RpcRequest;
-import rpc.json.RpcResponse;
+import rpc.json.message.RpcRequest;
+import rpc.json.message.RpcResponse;
 import rpc.util.RpcLog;
 
 public class RpcServer {

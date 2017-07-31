@@ -1,4 +1,4 @@
-package rpc.json;
+package rpc.json.message;
 
 public class ByteSequence {
 	public byte[] mBytesData = null; 

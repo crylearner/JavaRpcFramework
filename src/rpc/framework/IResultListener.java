@@ -1,6 +1,6 @@
 package rpc.framework;
 
-import rpc.json.RpcResponse;
+import rpc.json.message.RpcResponse;
 
 
 public interface IResultListener {

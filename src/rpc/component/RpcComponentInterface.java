@@ -4,7 +4,7 @@ import org.json.JSONObject;
 
 import rpc.framework.INotificationListener;
 import rpc.framework.IResultListener;
-import rpc.json.RpcResponse;
+import rpc.json.message.RpcResponse;
 
 
 /**

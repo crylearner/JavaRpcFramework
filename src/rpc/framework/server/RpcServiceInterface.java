@@ -1,7 +1,7 @@
 package rpc.framework.server;
 
-import rpc.json.RpcRequest;
-import rpc.json.RpcResponse;
+import rpc.json.message.RpcRequest;
+import rpc.json.message.RpcResponse;
 
 public interface RpcServiceInterface {
 	public static final String INVALID_PARAM_ERROR = "invalid parameters";

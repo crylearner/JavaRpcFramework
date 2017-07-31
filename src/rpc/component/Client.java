@@ -3,7 +3,7 @@ package rpc.component;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import rpc.json.RpcResponse;
+import rpc.json.message.RpcResponse;
 import rpc.util.RpcLog;
 import rpc.util.RpcTools;
 

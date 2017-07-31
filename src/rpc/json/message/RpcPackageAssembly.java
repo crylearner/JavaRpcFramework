@@ -1,4 +1,4 @@
-package rpc.json;
+package rpc.json.message;
 
 import java.util.ArrayList;
 import java.util.List;

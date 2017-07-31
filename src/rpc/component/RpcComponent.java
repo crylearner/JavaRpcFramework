@@ -10,8 +10,8 @@ import rpc.RpcNoSuchMethodException;
 import rpc.framework.INotificationListener;
 import rpc.framework.IResultListener;
 import rpc.framework.client.IRpcClientSession;
-import rpc.json.RpcRequest;
-import rpc.json.RpcResponse;
+import rpc.json.message.RpcRequest;
+import rpc.json.message.RpcResponse;
 import rpc.util.RpcLog;
 import rpc.util.RpcTools;
 

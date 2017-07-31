@@ -1,4 +1,4 @@
-package rpc.json;
+package rpc.json.message;
 
 import rpc.framework.message.MessageSerializer;
 import rpc.framework.message.RpcMessage;
