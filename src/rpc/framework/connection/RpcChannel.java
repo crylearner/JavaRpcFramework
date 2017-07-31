@@ -7,6 +7,10 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Arrays;
 
+import rpc.framework.RpcInvoker;
+import rpc.framework.message.RpcMessage;
+import rpc.json.message.RpcPackage;
+import rpc.json.message.RpcPackageAssembly;
 import rpc.util.RpcLog;
 import rpc.util.RpcTools;
 
@@ -16,7 +20,7 @@ public class RpcChannel implements IRpcChannel{
 	private static final String TAG = "RpcChannel";
     private static final boolean DEBUG = true;
     private static final int BUFFER_BLOCK_LEN = 50 * 1024;
-    
+    private RpcPackageAssembly mPackageAssembly = new RpcPackageAssembly();
 	Socket mSocket = null;
 	OutputStream mSocketOutput = null;
 	InputStream mSocketInput = null;
@@ -40,8 +44,7 @@ public class RpcChannel implements IRpcChannel{
 	}
 
 
-	@Override
-	public void send(byte[] cont) throws IOException {
+	private void sendBytes(byte[] cont) throws IOException {
 		synchronized(this){
 			if (!mSocket.isConnected()) {
 				RpcLog.e(TAG, "Socket is disconneted!");
@@ -56,9 +59,17 @@ public class RpcChannel implements IRpcChannel{
 		}
 	}
 	
-
 	@Override
-	public byte[] recv() throws IOException {
+	public void send(RpcInvoker invoker) throws IOException {
+		RpcMessage request = invoker.getRequest();
+        RpcPackage rpcpackage = new RpcPackage(request);
+        if(DEBUG)RpcLog.d(TAG, "<<Messsage>>" + request.toString());
+        byte[] contents = mPackageAssembly.pack(rpcpackage);
+        sendBytes(contents);
+	}
+	
+
+	private byte[] recvBytes() throws IOException {
 		byte[] readBuffer = new byte[BUFFER_BLOCK_LEN];
 		if (!mSocket.isConnected()) {
 			RpcLog.e(TAG, "Socket is disconneted!");
@@ -79,6 +90,19 @@ public class RpcChannel implements IRpcChannel{
 		System.arraycopy(readBuffer, 0, buffer, 0, countRead); //FIXME:: why need copy again
 		if (DEBUG)	RpcLog.d(TAG, "received:" + Arrays.toString(buffer));
 		return buffer;
+	}
+	
+	@Override
+	public RpcInvoker recv() throws IOException {
+		// 必须考虑粘包的问题，一次可能有多个pacakge。也就是上一次可能还有包没有取
+		RpcPackage result =  mPackageAssembly.unpack(null);
+		if (result == null) {
+			 result = mPackageAssembly.unpack(recvBytes());
+		}
+        if (result == null) { return null; }
+        RpcMessage message = result.toRpcMessage();
+        if (message == null) { return null; }
+        return new RpcInvoker(message, null, null);
 	}
 	
 	@Override

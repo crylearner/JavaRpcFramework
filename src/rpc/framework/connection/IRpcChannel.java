@@ -2,22 +2,25 @@ package rpc.framework.connection;
 
 import java.io.IOException;
 
+import rpc.framework.RpcInvoker;
+import rpc.framework.message.RpcMessage;
+import rpc.json.message.RpcPackage;
+import rpc.util.RpcLog;
+
 public interface IRpcChannel {
 	/**
-	 * 接收数据，返回字节串
+	 * 接收数据，返回invoker
 	 * 抛出异常，即表示Channel不可用
 	 * @return
 	 * @throws IOException
 	 */
-	public byte[] recv() throws IOException;
-	
+	public RpcInvoker recv() throws IOException;
 	/**
 	 * 抛出异常，即表示Channel不可用
-	 * @param data
+	 * @param invoker
 	 * @throws IOException
 	 */
-	public void send(byte[] data) throws IOException;
-	
+	public void send(RpcInvoker invoker) throws IOException;
 	
 	/**
 	 * 关闭通道

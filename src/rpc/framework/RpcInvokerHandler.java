@@ -3,12 +3,7 @@ package rpc.framework;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
 import rpc.framework.connection.IRpcChannel;
-import rpc.framework.message.RpcMessage;
-import rpc.json.message.RpcPackage;
-import rpc.json.message.RpcPackageAssembly;
-import rpc.json.message.RpcRequest;
 import rpc.util.RpcLog;
 import rpc.util.RpcTools;
 
@@ -28,7 +23,6 @@ public class RpcInvokerHandler {
 	private static final boolean DEBUG = RpcTools.DEBUG;
 	private BlockingQueue<RpcInvoker> mSendQueue = new LinkedBlockingQueue<RpcInvoker>();
 	private BlockingQueue<RpcInvoker> mRecvQueue = new LinkedBlockingQueue<RpcInvoker>();
-	private RpcPackageAssembly mPackageAssembly = new RpcPackageAssembly();
 	private boolean mHasException = false; 
 	private boolean mIsRunning = false;
 	IRpcChannel mChannel = null;
@@ -163,29 +157,17 @@ public class RpcInvokerHandler {
 	
 	private void sendInvoker() throws InterruptedException, IOException {
 		RpcInvoker invoker = mSendQueue.take();
-        RpcMessage request = invoker.getRequest();
-        RpcPackage rpcpackage = new RpcPackage(request);
-        if(DEBUG)RpcLog.d(TAG, "<<Messsage>>" + request.toString());
-        byte[] contents = mPackageAssembly.pack(rpcpackage);
-        System.out.println(contents.toString());
-        mChannel.send(contents);
+        mChannel.send(invoker);
         mSendQueue.remove(invoker);
 	}
+
 	
 	private void receiveInvoker() throws InterruptedException, IOException {
-		byte[] respBytes = null;
-		respBytes = mChannel.recv();
-        if (respBytes != null && respBytes.length > 0) {
-        	// 必须考虑粘包的问题，一次可能有多个pacakge
-        	while(true) {
-	            RpcPackage result =  mPackageAssembly.unpack(respBytes);
-	            if (result == null) { return; }
-	            RpcMessage message = result.toRpcMessage();
-	            if (message == null) { return; }
-				mRecvQueue.put(new RpcInvoker(message, null, null));
-				respBytes = null;
-        	}
+        RpcInvoker invoker = mChannel.recv();
+        if (invoker == null) {
+        	RpcLog.e(TAG, "receive invoker failed");
         }
+		mRecvQueue.put(invoker);
 	}
 	
 	public void bindChannel(IRpcChannel channel) {
