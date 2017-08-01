@@ -1,10 +1,7 @@
 package rpc.framework.server;
 
-import java.lang.reflect.Method;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-
-import rpc.util.RpcLog;
 
 
 
@@ -49,24 +46,34 @@ public class ServiceRegister {
 		return buffer.toString();
 	}
 	
+	/**register rpc method of servcieName
+	 * @param serviceName e.g. xxxx.add
+	 * @param service
+	 */
 	public void addService(String serviceName, RpcServiceInterface service) {
 		mServiceMap.put(serviceName, service);
 	}
 
-	public void addService(RpcServiceInterface service, String[] method) {
+	/**register all rpc method in the methods 
+	 * @param service
+	 * @param methods e.g.  {"add", "minus", "divide"}
+	 */
+	public void addService(RpcServiceInterface service, String[] methods) {
 		String className = getClassLastName(service);
-		for (String m : method) {
+		for (String m : methods) {
 			addService(className + "." + m, service);
 		}
 	}
 	
+	
+	/**register all rpc method in service.lis()
+	 * @param service 
+	 */
 	public void addService(RpcServiceInterface service) {
 		for (String name:service.list()) {
 			addService(name, service);
 		}
 	}
-	
-	
 	
 	/**删除与服务方法method对应的rpc服务
 	 * @param method 服务方法名 e.g.   MyService.myMethod

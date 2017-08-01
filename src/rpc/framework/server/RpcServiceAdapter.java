@@ -2,27 +2,39 @@ package rpc.framework.server;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
 import rpc.util.RpcLog;
 
+/**adapter none RpcServiceInterface to RpcServiceInterface like
+ * @author sunshyran
+ *
+ */
 public final class RpcServiceAdapter implements RpcServiceInterface {
 	private final static String TAG = "RpcServiceAdapter";
 	private Method mMethod;
 	private Object mObject;
 	private String mServiceName;
 
+	/**adapt target method as RpcServiceInterface like
+	 * @param object
+	 * @param method
+	 * @param argsType
+	 * @return
+	 */
 	public static  RpcServiceAdapter adapt(Object object, String method, Class<?>[] argsType){
 		Method m = null;
 		try {
 			m = object.getClass().getMethod(method, argsType);
 		} catch (NoSuchMethodException | SecurityException e) {
 			RpcLog.e(TAG, "object " + object + " has no such method: " + method);
-			e.printStackTrace();
+			RpcLog.e(TAG, e);
 			return null;
 		}
 		
@@ -34,19 +46,41 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 		return service;
 	}
 	
+	
 	public static RpcServiceAdapter[] adapt(Object object, String[] methods) {
-		RpcServiceAdapter[] services = new RpcServiceAdapter[methods.length];
+		ArrayList<RpcServiceAdapter> services = new ArrayList<RpcServiceAdapter>();
 		
-		for (Method m: object.getClass().getMethods()) {
-			for (String name: methods) {
-				if (name == m.getName()) {
-					adapt(object, name, m.getParameterTypes());
+		Method[] methodsArray = object.getClass().getMethods();
+		for (String name: methods) {
+			boolean ok = false;
+			for (Method m: methodsArray) {
+				if (name.equals(m.getName())) {
+					services.add(adapt(object, name, m.getParameterTypes()));
+					ok = true;
 					break;
 				}
 			}
+			if (!ok) {	RpcLog.e(TAG, "object " + object + " has no such method: " + name);	}
 		}
-		return services;
+		
+		return services.toArray(new RpcServiceAdapter[]{});
 	}
+	
+	public static RpcServiceAdapter[] adapt(Object object) {
+		ArrayList<Method> methodsArray = new ArrayList<Method>();
+		for (Method m : object.getClass().getMethods()) {
+			if (m.getAnnotation(Rpc.class) != null) {
+				methodsArray.add(m);
+			}
+		}
+		
+		ArrayList<RpcServiceAdapter> services = new ArrayList<RpcServiceAdapter>();
+		for (Method m : methodsArray) {
+			services.add(adapt(object, m.getName(), m.getParameterTypes()));
+		}
+		return services.toArray(new RpcServiceAdapter[]{});
+	}
+	
 
 	private static String getClassLastName(Object object) {
 		String className = object.getClass().getName();
@@ -69,25 +103,45 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 			for (int i = 0; i < args.length; ++i) {
 				args[i] = ((JSONArray)params).get(i);
 			}
+		} else if (params instanceof JSONObject) {
+			Rpc rpc = mMethod.getAnnotation(Rpc.class);
+			if (rpc == null) {
+				RpcLog.e(TAG, "Rpc annotation is not found for method: " + mMethod.getName());
+				return new RpcResponse(request.getId(), "IllegalArgumentException", false);
+			}
+			String[] paramsName = rpc.params();
+			if (paramsName.length != args.length) {
+				RpcLog.e(TAG, "Rpc annotation has invaid params for method: " + mMethod.getName());
+				return new RpcResponse(request.getId(), "IllegalArgumentException", false);
+			}
+			for (int i=0; i<args.length; ++i) {
+				args[i] = ((JSONObject) params).get(paramsName[i]);
+			}
 		} else {
-			RpcLog.e(TAG, "Request params only support json array now");
-			return null;
+			RpcLog.e(TAG, "Request params only support json array or json object");
+			return new RpcResponse(request.getId(), "IllegalArgumentException", false);
 		}
 		
+		Object result = null;
 		try {
-			Object result = mMethod.invoke(mObject, args);
-			return new RpcResponse(request.getId(), result, true);
+			result = mMethod.invoke(mObject, args);
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
+			RpcLog.e(TAG, e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			RpcLog.e(TAG, e);
 		} catch (InvocationTargetException e) {
-			e.printStackTrace();
+			RpcLog.e(TAG, e);
 		} catch (SecurityException e) {
-			e.printStackTrace();
+			RpcLog.e(TAG, e);
+		} catch(Exception e) {
+			RpcLog.e(TAG, e);
 		}
 		
-		return null;
+		if (result != null) {
+			return new RpcResponse(request.getId(), result, true);
+		} else {
+			return new RpcResponse(request.getId(), "failed request", false);
+		}
 	}
 
 	
@@ -100,7 +154,7 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 		RpcServiceAdapter service = RpcServiceAdapter.adapt(x, "addone", types);
 		RpcRequest request = new RpcRequest(1, "X.addone", new JSONArray("[1, 2]"));
 		System.out.println(service.execute(request));
-		System.out.println(service.list());
+		System.out.println(Arrays.toString(service.list()));
 	}
 
 	
