@@ -1,6 +1,5 @@
 package rpc.json.message;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -71,7 +70,7 @@ public class RpcRequest implements RpcMessage{
 			}
             request.put(RpcKey.ID, mRequestId);
         } catch (JSONException e) {
-            RpcLog.w(TAG, e.getMessage());
+            RpcLog.e(TAG, e);
         }
         return request.toString();
     }

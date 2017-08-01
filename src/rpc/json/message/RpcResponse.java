@@ -51,7 +51,7 @@ public class RpcResponse implements RpcMessage {
                 message.put(RpcKey.ERROR, mError);
             }
         } catch (JSONException e) {
-            RpcLog.w(TAG,  e.getMessage());
+            RpcLog.e(TAG,  e);
         }
         return message.toString();
     }
@@ -69,7 +69,7 @@ public class RpcResponse implements RpcMessage {
 				mSuccessful = false;
 			}
     	} catch (JSONException e) {
-    		RpcLog.e(TAG,e.getMessage());
+    		RpcLog.e(TAG, e);
     	}
         
     }

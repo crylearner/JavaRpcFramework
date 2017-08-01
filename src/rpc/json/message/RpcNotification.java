@@ -39,7 +39,7 @@ public class RpcNotification implements RpcMessage {
 				message.put(RpcKey.PARAMS, mParams);
 			}
         } catch (JSONException e) {
-            RpcLog.w(TAG, "JSONException: encodeToRpcPackage()");
+            RpcLog.e(TAG, e);
         }
         return message.toString();
     }
@@ -52,7 +52,7 @@ public class RpcNotification implements RpcMessage {
             mCallback = result.getInt(RpcKey.CALLBACK);
             setParams(result.get(RpcKey.PARAMS));
         } catch (JSONException e) {
-            RpcLog.e(TAG, e.getMessage());
+            RpcLog.e(TAG, e);
         }
 	}
 
