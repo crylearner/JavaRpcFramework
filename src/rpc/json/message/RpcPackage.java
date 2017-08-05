@@ -19,7 +19,7 @@ public class RpcPackage {
     public static final int LEST_LENGTH = 12;
     public static final int MAX_PACKAGE_SIZE = 32*1024;
 
-    static final byte[] sHEAD = {'@','R','P','C'};
+    static final byte[] sHEAD = {'R','P','C','@'};
     static final byte[] sTAIL = {'#','r','p','c'};
     String mMessage = null; // request or repsonse message 
     private static Serializer mSerializer = new Serializer();
@@ -95,7 +95,7 @@ public class RpcPackage {
    
 	public static void main(String[] args) {
 		RpcRequest request = new RpcRequest(123, "test", "[1,2,3]");
-		System.out.println(Arrays.toString(new byte[]{'@','R','P','C'}));
+		System.out.println(Arrays.toString(new byte[]{'R','P','C','@'}));
 		byte[] data = RpcPackage.encodeToBytes(new RpcPackage(request));
 		System.out.println(Arrays.toString(data));
 		ByteSequence x = new ByteSequence();

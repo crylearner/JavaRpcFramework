@@ -56,6 +56,8 @@ public class RpcServer {
 	 * @param port
 	 */
 	public void serve(String ip, int port) {
+		
+		while(true) {
 		mIsRunning = true;
 		IRpcChannel channel = RpcConnector.acceptChannel(ip, port);
 		if (channel == null) {
@@ -63,6 +65,7 @@ public class RpcServer {
 		}
 		mHandler.bindChannel(channel);
 		run();
+		}
 	}
 	
 

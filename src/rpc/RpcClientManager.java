@@ -156,7 +156,7 @@ public class RpcClientManager {
     
     public static void main(String[] args) {
     	RpcClientManager climgr = new RpcClientManager();
-    	climgr.login("crylearner", "123456", "127.0.0.1", 5000);
+    	climgr.login("crylearner", "123456", "127.0.0.1", 12345);
     	Client cli = (Client)climgr.getComponent(Client.NAME, null);
     	cli.login("crylearner", "123456");
     	System.out.println("success");
