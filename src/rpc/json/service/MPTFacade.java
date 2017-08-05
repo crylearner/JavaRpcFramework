@@ -1,4 +1,4 @@
-package rpc.framework.service;
+package rpc.json.service;
 
 import rpc.framework.server.RpcServiceInterface;
 import rpc.json.message.RpcRequest;

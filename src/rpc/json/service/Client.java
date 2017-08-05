@@ -1,4 +1,4 @@
-package rpc.framework.service;
+package rpc.json.service;
 
 import org.json.JSONException;
 import org.json.JSONObject;
