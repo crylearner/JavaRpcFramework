@@ -57,13 +57,15 @@ public class RpcServiceAdapterTest {
 
 	@Test
 	public final void testAdaptObject() {
-		RpcServiceInterface[] s = RpcServiceAdapter.adapt(new RpcServiceAdapterTestHelper());
-		assertTrue(s.length == 2);
-		assertEquals(s[0].execute(new RpcRequest(1, "RpcServiceAdapterTestHelper.s1", new JSONArray("[1]"))).getResult(), 
+		RpcServiceInterface s = RpcServiceAdapter.adapt(new RpcServiceAdapterTestHelper());
+		assertEquals(s.execute(new RpcRequest(1, "RpcServiceAdapterTestHelper.s1", new JSONArray("[1]"))).getResult(), 
 				1);
 		
-		assertEquals(s[0].execute(new RpcRequest(1, "RpcServiceAdapterTestHelper.s1", new JSONObject("{'x':1}"))).getResult(), 
+		assertEquals(s.execute(new RpcRequest(1, "RpcServiceAdapterTestHelper.s1", new JSONObject("{'x':1}"))).getResult(), 
 				1);
+		
+		assertEquals(s.execute(new RpcRequest(1, "RpcServiceAdapterTestHelper.s2", new JSONObject("{'x':1}"))).getResult(), 
+				0);
 	}
 
 	@Test

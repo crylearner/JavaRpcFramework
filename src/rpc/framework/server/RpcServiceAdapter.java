@@ -4,6 +4,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,9 +21,8 @@ import rpc.util.RpcLog;
  */
 public final class RpcServiceAdapter implements RpcServiceInterface {
 	private final static String TAG = "RpcServiceAdapter";
-	private Method mMethod;
-	private Object mObject;
-	private String mServiceName;
+	private ConcurrentHashMap<String/*service name*/, Method> mMethodsMap = new ConcurrentHashMap<String, Method>();
+	private Object mObject; // all method share the same object
 
 	/**adapt target method as RpcServiceInterface like
 	 * @param object
@@ -39,24 +40,25 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 			return null;
 		}
 		
-		String className = getClassLastName(object);
 		RpcServiceAdapter service = new RpcServiceAdapter();
-		service.mMethod = m;
-		service.mObject = object;
-		service.mServiceName = className + '.' + m.getName();
+		service.addService(object, m);
 		return service;
 	}
 	
 	
-	public static RpcServiceAdapter[] adapt(Object object, String[] methods) {
-		ArrayList<RpcServiceAdapter> services = new ArrayList<RpcServiceAdapter>();
+	public static RpcServiceAdapter adapt(Object object, String[] methods) {
+		RpcServiceAdapter service = null;
 		
 		Method[] methodsArray = object.getClass().getMethods();
 		for (String name: methods) {
 			boolean ok = false;
 			for (Method m: methodsArray) {
 				if (name.equals(m.getName())) {
-					services.add(adapt(object, name, m.getParameterTypes()));
+					if (service == null) {
+						service = adapt(object, name, m.getParameterTypes());
+					} else {
+						service.addService(object, m);
+					}
 					ok = true;
 					break;
 				}
@@ -64,10 +66,10 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 			if (!ok) {	RpcLog.e(TAG, "object " + object + " has no such method: " + name);	}
 		}
 		
-		return services.toArray(new RpcServiceAdapter[]{});
+		return service;
 	}
 	
-	public static RpcServiceAdapter[] adapt(Object object) {
+	public static RpcServiceAdapter adapt(Object object) {
 		ArrayList<Method> methodsArray = new ArrayList<Method>();
 		for (Method m : object.getClass().getMethods()) {
 			if (m.getAnnotation(Rpc.class) != null) {
@@ -75,11 +77,15 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 			}
 		}
 		
-		ArrayList<RpcServiceAdapter> services = new ArrayList<RpcServiceAdapter>();
+		RpcServiceAdapter service = null;
 		for (Method m : methodsArray) {
-			services.add(adapt(object, m.getName(), m.getParameterTypes()));
+			if (service == null) {
+				service = adapt(object, m.getName(), m.getParameterTypes());
+			} else {
+				service.addService(object, m);;
+			}
 		}
-		return services.toArray(new RpcServiceAdapter[]{});
+		return service;
 	}
 	
 
@@ -91,13 +97,28 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 		return className;
 	}
 	
+	private void addService(Object serviceObject, Method method) {
+		mObject = serviceObject;
+		mMethodsMap.put(getClassLastName(serviceObject) + '.' + method.getName(), method);
+	}
+	
+	
 	@Override
 	public String[] list() {
-		return new String [] {mServiceName};
+		Set<String> set = mMethodsMap.keySet();
+		return set.toArray(new String[]{});
 	}
-
+	
 	@Override
 	public RpcResponse execute(RpcRequest request) {
+		Method m = mMethodsMap.get(request.getMethod());
+		if (m == null) {
+			return new RpcResponse(request.getId(), "Method not found", false);
+		}
+		return executeTheMethod(request, m);
+	}
+
+	public RpcResponse executeTheMethod(RpcRequest request, Method mMethod) {
 		Object[] args = new Object[mMethod.getParameterTypes().length]; // getParametersCount in java1.6 is not available
 		Object params = request.getParams();
 		if (params instanceof JSONArray) {
@@ -130,6 +151,11 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 			return new RpcResponse(request.getId(), "IllegalArgumentException", false);
 		}
 		
+		return invoke(request, mMethod, args);
+	}
+
+
+	private RpcResponse invoke(RpcRequest request, Method mMethod, Object[] args) {
 		Object result = null;
 		try {
 			result = mMethod.invoke(mObject, args);

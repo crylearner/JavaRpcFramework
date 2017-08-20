@@ -18,9 +18,7 @@ public class Main {
 		
 		// 普通类，没有继承自RpcServiceInterface。 使用
 		Hello hello = new Hello();
-		for (RpcServiceInterface s:RpcServiceAdapter.adapt(hello)) {
-			server.registerService(s);
-		}
+		server.registerService(RpcServiceAdapter.adapt(hello));
 		
 		server.serve(null, 12345);
 	}
