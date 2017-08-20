@@ -1,14 +1,19 @@
 package rpc.framework.server;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import rpc.exception.RpcException;
+import rpc.exception.RpcInternalError;
+import rpc.exception.RpcInvalidRquest;
 import rpc.framework.RpcInvoker;
 import rpc.framework.RpcServerInvokerHandler;
 import rpc.framework.connection.IRpcChannel;
 import rpc.framework.connection.RpcConnector;
+import rpc.json.message.RpcErrorResponse;
 import rpc.json.message.RpcNotification;
 import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
@@ -36,7 +41,15 @@ public class RpcServer {
 		public RpcResponse call() throws Exception {
 			if (mService == null) { return null; } // FIXME:: if properly
 			RpcLog.d(TAG, "RequestProcessor is callings");
-			return mService.execute(mRequest);
+			try {
+				if (mRequest.getMethod() == null || mRequest.getMethod().isEmpty()) {
+					throw new RpcInvalidRquest("method is empty in request of " + mRequest.toString());
+				}
+				return mService.execute(mRequest);
+			
+			} catch (RpcException e) {
+				return new RpcErrorResponse(mRequest.getId(), e.toError());
+			}
 		}
 		
 	}
@@ -96,9 +109,9 @@ public class RpcServer {
 				} else {
 					try {
 						response = mThreadPool.submit(new RequestProcessor(service, request)).get();
-					} catch (ExecutionException e) {
+					} catch (ExecutionException | InterruptedException | CancellationException e) {
 						RpcLog.e(TAG, e);
-						response = null;
+						response = new RpcResponse(request.getId(), (new RpcInternalError(e.toString())).toError(), false);
 					}
 				}
 				mHandler.invoke(new RpcInvoker(response, null, null));

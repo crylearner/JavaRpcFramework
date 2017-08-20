@@ -1,5 +1,6 @@
 package rpc.framework.server;
 
+import rpc.exception.RpcException;
 import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
 
@@ -16,6 +17,6 @@ public interface RpcServiceInterface {
 	 * @param request
 	 * @return 请求执行结果
 	 */ 
-	public RpcResponse execute(RpcRequest request);  
+	public RpcResponse execute(RpcRequest request) throws RpcException;  
 	
 }

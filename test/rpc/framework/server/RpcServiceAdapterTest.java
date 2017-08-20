@@ -3,6 +3,7 @@ package rpc.framework.server;
 import static org.junit.Assert.*;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -10,6 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import rpc.exception.RpcException;
 import rpc.framework.server.annotation.Rpc;
 import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
@@ -58,14 +60,21 @@ public class RpcServiceAdapterTest {
 	@Test
 	public final void testAdaptObject() {
 		RpcServiceInterface s = RpcServiceAdapter.adapt(new RpcServiceAdapterTestHelper());
+		try {
 		assertEquals(s.execute(new RpcRequest(1, "RpcServiceAdapterTestHelper.s1", new JSONArray("[1]"))).getResult(), 
-				1);
-		
+					1);
 		assertEquals(s.execute(new RpcRequest(1, "RpcServiceAdapterTestHelper.s1", new JSONObject("{'x':1}"))).getResult(), 
 				1);
 		
 		assertEquals(s.execute(new RpcRequest(1, "RpcServiceAdapterTestHelper.s2", new JSONObject("{'x':1}"))).getResult(), 
 				0);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RpcException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Test

@@ -33,11 +33,19 @@ public class RpcResponse implements RpcMessage {
     	mId = id;
     	if (successful) {
     		mResult = result;
+    		if (mResult == null) {
+    			mResult = true; // fix some service like as "void method() {}"
+    		}
     	} else {
     		mError = result;
     	}
     	mSuccessful = successful;
     }
+    
+    public RpcResponse(int id, Object result) {
+    	this(id, result, true);
+    }
+
 
     @Override
     public String encode() {
@@ -50,6 +58,7 @@ public class RpcResponse implements RpcMessage {
             if (mError != null) {
                 message.put(RpcKey.ERROR, mError);
             }
+            
         } catch (JSONException e) {
             RpcLog.e(TAG,  e);
         }
