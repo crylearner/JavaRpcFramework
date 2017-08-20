@@ -9,16 +9,15 @@ import rpc.framework.RpcInvoker;
 import rpc.framework.RpcServerInvokerHandler;
 import rpc.framework.connection.IRpcChannel;
 import rpc.framework.connection.RpcConnector;
+import rpc.json.message.RpcNotification;
 import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
-import rpc.json.service.Client;
-import rpc.json.service.MPTFacade;
 import rpc.util.RpcLog;
 
 public class RpcServer {
-	private static final String TAG = "RpcServant";
+	private static final String TAG = "RpcServer";
 	private boolean mIsRunning = false;
-	private RpcServerInvokerHandler mHandler = new RpcServerInvokerHandler();
+	private RpcServerInvokerHandler mHandler = null;
 	ServiceRegister mServiceRegister = new ServiceRegister();
 	ExecutorService mThreadPool = Executors.newCachedThreadPool();
 
@@ -47,7 +46,7 @@ public class RpcServer {
 	 */
 	public void registerService(RpcServiceInterface service) { 
 		mServiceRegister.addService(service);
-		RpcLog.i(TAG, mServiceRegister.listServices());
+		
 	}
 	
 	
@@ -56,19 +55,30 @@ public class RpcServer {
 	 * @param port
 	 */
 	public void serve(String ip, int port) {
-		
+		RpcLog.i(TAG, mServiceRegister.listServices());
 		while(true) {
-		mIsRunning = true;
-		IRpcChannel channel = RpcConnector.acceptChannel(ip, port);
-		if (channel == null) {
-			RpcLog.e(TAG, "aquire rpc channel failed");
-		}
-		mHandler.bindChannel(channel);
-		run();
+			IRpcChannel channel = RpcConnector.acceptChannel(ip, port);
+			if (channel == null) {
+				RpcLog.e(TAG, "aquire rpc channel failed");
+				continue;
+			}
+			mIsRunning = true;
+			mHandler = new RpcServerInvokerHandler();
+			mHandler.bindChannel(channel);
+			run();
 		}
 	}
 	
-
+	public void onNotify(RpcNotification message) {
+		while (mIsRunning) {
+			if (message == null) { continue; }
+			try {
+				mHandler.invoke(new RpcInvoker(message, null, null));
+			} catch (InterruptedException e) {
+				RpcLog.e(RpcServer.TAG, "server is stopped because of exception:" + e);
+			}
+		}
+	}
 	
 	
 	public void run() {
@@ -87,7 +97,7 @@ public class RpcServer {
 					try {
 						response = mThreadPool.submit(new RequestProcessor(service, request)).get();
 					} catch (ExecutionException e) {
-						RpcLog.e(TAG, e.getMessage());
+						RpcLog.e(TAG, e);
 						response = null;
 					}
 				}
@@ -106,14 +116,5 @@ public class RpcServer {
 	
 	public void onDestroy() {
 		mHandler.shutdown();
-	}
-	
-	public static void main(String[] args) {
-		RpcServer server = new RpcServer();
-		Client clientSrv = new Client();
-		MPTFacade facadeSrv = new MPTFacade();
-		server.registerService(clientSrv);
-		server.registerService(facadeSrv);
-		server.serve(null, 5000);
 	}
 }

@@ -18,7 +18,7 @@ import rpc.util.RpcTools;
 
 public class RpcChannel implements IRpcChannel{
 	private static final String TAG = "RpcChannel";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private static final int BUFFER_BLOCK_LEN = 50 * 1024;
     private RpcPackageAssembly mPackageAssembly = new RpcPackageAssembly();
 	Socket mSocket = null;
@@ -63,7 +63,7 @@ public class RpcChannel implements IRpcChannel{
 	public void send(RpcInvoker invoker) throws IOException {
 		RpcMessage request = invoker.getRequest();
         RpcPackage rpcpackage = new RpcPackage(request);
-        if(DEBUG)RpcLog.d(TAG, "<<Messsage>>" + request.toString());
+        RpcLog.i(TAG, "<<Messsage>>" + request.toString());
         byte[] contents = mPackageAssembly.pack(rpcpackage);
         sendBytes(contents);
 	}
@@ -102,6 +102,7 @@ public class RpcChannel implements IRpcChannel{
         if (result == null) { return null; }
         RpcMessage message = result.toRpcMessage();
         if (message == null) { return null; }
+        RpcLog.i(TAG, "recv: " + message.toString());
         return new RpcInvoker(message, null, null);
 	}
 	

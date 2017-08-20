@@ -16,6 +16,6 @@ public interface RpcServiceInterface {
 	 * @param request
 	 * @return 请求执行结果
 	 */ 
-	public RpcResponse execute(RpcRequest request);
+	public RpcResponse execute(RpcRequest request);  
 	
 }

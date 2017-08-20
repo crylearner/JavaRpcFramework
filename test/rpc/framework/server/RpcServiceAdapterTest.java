@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import rpc.framework.server.annotation.Rpc;
 import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
 

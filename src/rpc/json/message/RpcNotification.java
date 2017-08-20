@@ -12,7 +12,7 @@ public class RpcNotification implements RpcMessage {
 	private static final String TAG = "RpcNotification";
 	private String mMethod = null;
 	private int mCallback = 0;
-	private JSONObject mParams = null;
+	private Object mParams = null;
 	
 	public RpcNotification() {
 		
@@ -56,7 +56,7 @@ public class RpcNotification implements RpcMessage {
         }
 	}
 
-	public JSONObject getParams() {
+	public Object getParams() {
 		return mParams;
 	}
 
@@ -64,7 +64,7 @@ public class RpcNotification implements RpcMessage {
 		if (params == JSONObject.NULL) {
 			mParams = null;
 		} else {
-			mParams = (JSONObject)params;
+			mParams = params;
 		}
 	}
 
@@ -80,7 +80,7 @@ public class RpcNotification implements RpcMessage {
 		return mCallback;
 	}
 
-	private void setCallback(int callback) {
+	public void setCallback(int callback) {
 		mCallback = callback;
 	}
 

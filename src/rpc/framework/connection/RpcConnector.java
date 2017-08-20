@@ -29,6 +29,7 @@ public class RpcConnector {
 				RpcLog.d(TAG, "startConnect() sucessfully!:" + addr.toString());
 			} else {
 				RpcLog.d(TAG, "startConnect() failed!:" + addr.toString());
+				mSocket.close();
 				return null;
 			}
 			RpcChannel channel = new RpcChannel(mSocket);
@@ -54,10 +55,10 @@ public class RpcConnector {
 	public static IRpcChannel acceptChannel(String ip, int port) {
 		ServerSocket mSocket = null;
 		try {
-			RpcLog.i(TAG, "start server");
+			RpcLog.i(TAG, "start to listen");
 			mSocket = new ServerSocket(port);
 		} catch (IOException e) {
-			RpcLog.e(TAG, "start server failed");
+			RpcLog.e(TAG, "listen failed");
 			return null;
 		}
 		

@@ -79,7 +79,7 @@ public class RpcResponse implements RpcMessage {
     }
  
    
-    private void setResult(Object result) {
+    public void setResult(Object result) {
     	mResult = result;
     }
     

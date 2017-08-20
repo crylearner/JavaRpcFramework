@@ -8,6 +8,7 @@ import java.util.Arrays;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import rpc.framework.server.annotation.Rpc;
 import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
 import rpc.util.RpcLog;
@@ -97,13 +98,16 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 
 	@Override
 	public RpcResponse execute(RpcRequest request) {
-		Object[] args = new Object[mMethod.getParameterCount()];
+		Object[] args = new Object[mMethod.getParameterTypes().length]; // getParametersCount in java1.6 is not available
 		Object params = request.getParams();
 		if (params instanceof JSONArray) {
+			// params是按照函数参数的定义顺序，依次排列的数组
 			for (int i = 0; i < args.length; ++i) {
 				args[i] = ((JSONArray)params).get(i);
 			}
+			
 		} else if (params instanceof JSONObject) {
+			// params是按照函数参数的 key-value键值对，由于java1.8以下，不能直接读取形参名，所以只能使用annotation
 			Rpc rpc = mMethod.getAnnotation(Rpc.class);
 			if (rpc == null) {
 				RpcLog.e(TAG, "Rpc annotation is not found for method: " + mMethod.getName());
@@ -117,6 +121,10 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 			for (int i=0; i<args.length; ++i) {
 				args[i] = ((JSONObject) params).get(paramsName[i]);
 			}
+			
+		} else if (params == null || params == JSONObject.NULL) {
+			args = null;
+			
 		} else {
 			RpcLog.e(TAG, "Request params only support json array or json object");
 			return new RpcResponse(request.getId(), "IllegalArgumentException", false);
