@@ -2,7 +2,6 @@ package server.json;
 
 import rpc.framework.server.RpcServer;
 import rpc.framework.server.RpcServiceAdapter;
-import rpc.framework.server.RpcServiceInterface;
 
 public class Main {
 
@@ -13,14 +12,17 @@ public class Main {
 	public static void main(String[] args) {
 		RpcServer server = new RpcServer();
 		// 继承自RpcServiceInterface的服务
-		HelloService helloservice = new HelloService();
-		server.registerService(helloservice);
+//		HelloService helloservice = new HelloService();
+//		server.registerService(helloservice);
+//		server.registerSubject("HelloService.listenGrowUp", helloservice);
+//		server.registerSubject("HelloService.unlistenGrowUp", helloservice);
 		
 		// 普通类，没有继承自RpcServiceInterface。 使用
-		Hello hello = new Hello();
+		HelloRpcWrapper hello = new HelloRpcWrapper();
 		server.registerService(RpcServiceAdapter.adapt(hello));
-		
-		server.serve(null, 12345);
+		//server.registerSubject("Hello.observeAge", hello);
+		//server.registerSubject("Hello.unobserveAge", hello);
+		server.serve(null, 12346);
 	}
 	
 }

@@ -19,8 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 23683
  *
  */
-public class ServiceRegister {
-	private static final String TAG="ServiceRegister";
+public class ServiceRegistry {
+	private static final String TAG="ServiceRegistry";
 	
 	private ConcurrentHashMap<String/*service name*/, RpcServiceInterface> mServiceMap = new ConcurrentHashMap<String, RpcServiceInterface>();
 	
@@ -53,7 +53,7 @@ public class ServiceRegister {
 	public void addService(String serviceName, RpcServiceInterface service) {
 		mServiceMap.put(serviceName, service);
 	}
-
+	
 	/**register all rpc method in the methods 
 	 * @param service
 	 * @param methods e.g.  {"add", "minus", "divide"}
@@ -75,11 +75,18 @@ public class ServiceRegister {
 		}
 	}
 	
+	
 	/**删除与服务方法method对应的rpc服务
 	 * @param method 服务方法名 e.g.   MyService.myMethod
 	 */
 	public void removeService(String method) {
 		mServiceMap.remove(method);
+	}
+	
+	public void removeService(String[] methods) {
+		for (String m:methods) {
+			removeService(m);
+		}
 	}
 	
 	/**

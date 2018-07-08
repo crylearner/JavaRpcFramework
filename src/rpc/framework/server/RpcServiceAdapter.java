@@ -1,11 +1,14 @@
 package rpc.framework.server;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.management.NotificationListener;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,7 +18,9 @@ import rpc.exception.RpcInternalError;
 import rpc.exception.RpcInvalidParameters;
 import rpc.exception.RpcMethodNotFound;
 import rpc.exception.RpcPermissionDenied;
-import rpc.framework.server.annotation.Rpc;
+import rpc.framework.server.annotation.RpcAttachEvent;
+import rpc.framework.server.annotation.RpcMethod;
+import rpc.framework.server.annotation.RpcService;
 import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
 import rpc.util.RpcLog;
@@ -27,7 +32,10 @@ import rpc.util.RpcLog;
 public final class RpcServiceAdapter implements RpcServiceInterface {
 	private final static String TAG = "RpcServiceAdapter";
 	private ConcurrentHashMap<String/*service name*/, Method> mMethodsMap = new ConcurrentHashMap<String, Method>();
+	private ConcurrentHashMap<String/*service name*/, Method> mEventsMap = new ConcurrentHashMap<String, Method>();
 	private Object mObject; // all method share the same object
+	private NotificationListener mListener = null;
+	
 
 	/**adapt target method as RpcServiceInterface like
 	 * @param object
@@ -77,12 +85,20 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 	public static RpcServiceAdapter adapt(Object object) {
 		ArrayList<Method> methodsArray = new ArrayList<Method>();
 		for (Method m : object.getClass().getMethods()) {
-			if (m.getAnnotation(Rpc.class) != null) {
-				if (m.getAnnotation(Rpc.class).params().length != m.getParameterTypes().length) {
+			RpcMethod an = m.getAnnotation(RpcMethod.class);
+			if (an != null) {
+				if (an.params().length > 0 && an.params().length != m.getParameterTypes().length) {
 					RpcLog.e(TAG, "method has an inconsistent Rpc annotation: " + m.getName());
 					continue;
 				}
-				methodsArray.add(m);
+				if (!an.subject()) {
+					methodsArray.add(m);
+				} else {
+					RpcSubscriber.BaseRpcSubscriber.registerSubject(getMainServiceName(object) + '.' + m.getName(), object);
+				}
+			} else if (m.getAnnotation(RpcAttachEvent.class) != null) {
+				m.getAnnotation(RpcAttachEvent.class);
+				//TODO
 			}
 		}
 		
@@ -106,10 +122,19 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 		return className;
 	}
 	
+	private static String getMainServiceName(Object object) {
+		RpcService an = object.getClass().getAnnotation(RpcService.class);
+		if (an != null && !an.name().isEmpty()) {
+			return an.name();
+		} else {
+			// FIXME:: internal class name is properly?
+			return getClassLastName(object);
+		}
+	}
+	
 	private void addService(Object serviceObject, Method method) {
 		mObject = serviceObject;
-		// FIXME:: internal class name is properly?
-		mMethodsMap.put(getClassLastName(serviceObject) + '.' + method.getName(), method);
+		mMethodsMap.put(getMainServiceName(serviceObject) + '.' + method.getName(), method);
 	}
 	
 	
@@ -121,9 +146,10 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 	
 	@Override
 	public RpcResponse execute(RpcRequest request) throws RpcException {
-		Method m = mMethodsMap.get(request.getMethod());
+		String methodname = request.getMethod();
+		Method m = mMethodsMap.get(methodname);
 		if (m == null) {
-			throw new RpcMethodNotFound(request.getMethod());
+			throw new RpcMethodNotFound(methodname);
 		}
 		
 		Object[] args = null;
@@ -153,7 +179,7 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 		}
 		
 		// params是按照函数参数的 key-value键值对，由于java1.8以下，不能直接读取形参名，所以只能使用annotation
-		Rpc rpc = mMethod.getAnnotation(Rpc.class);
+		RpcMethod rpc = mMethod.getAnnotation(RpcMethod.class);
 		if (rpc == null) {
 			RpcLog.e(TAG, "Rpc annotation is not found for method: " + mMethod.getName());
 			throw new RpcInternalError("method " + mMethod.getName() + " annotate error");
@@ -168,6 +194,9 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 		
 		for (int i=0; i<args.length; ++i) {
 			args[i] = params.get(paramsName[i]);
+			if (args[i] == JSONObject.NULL) {
+				args[i] = null; // 统一为null，方便处理。 因为JSONObject.NULL并非是JSONObject对象
+			}
 		}
 		
 		return args;
@@ -181,6 +210,9 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 		// params是按照函数参数的定义顺序，依次排列的数组
 		for (int i = 0; i < args.length; ++i) {
 			args[i] = params.get(i);
+			if (args[i] == JSONObject.NULL) {
+				args[i] = null; // 统一为null，方便处理。 因为JSONObject.NULL并非是JSONObject对象
+			}
 		}
 		return args;
 	}
@@ -226,7 +258,5 @@ public final class RpcServiceAdapter implements RpcServiceInterface {
 		}
 		System.out.println(Arrays.toString(service.list()));
 	}
-
-	
 	
 }

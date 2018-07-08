@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import rpc.exception.RpcException;
 import rpc.exception.RpcInternalError;
 import rpc.exception.RpcInvalidRquest;
+import rpc.framework.INotificationListener;
 import rpc.framework.RpcInvoker;
 import rpc.framework.RpcServerInvokerHandler;
 import rpc.framework.connection.IRpcChannel;
@@ -19,11 +20,11 @@ import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
 import rpc.util.RpcLog;
 
-public class RpcServer {
+public class RpcServer implements INotificationListener{
 	private static final String TAG = "RpcServer";
 	private boolean mIsRunning = false;
 	private RpcServerInvokerHandler mHandler = null;
-	ServiceRegister mServiceRegister = new ServiceRegister();
+	ServiceRegistry mServiceRegister = new ServiceRegistry();
 	ExecutorService mThreadPool = Executors.newCachedThreadPool();
 
 	class RequestProcessor implements Callable<RpcResponse> {
@@ -43,7 +44,7 @@ public class RpcServer {
 			RpcLog.d(TAG, "RequestProcessor is callings");
 			try {
 				if (mRequest.getMethod() == null || mRequest.getMethod().isEmpty()) {
-					throw new RpcInvalidRquest("method is empty in request of " + mRequest.toString());
+					throw new RpcInvalidRquest("method is empty in request of "  + mRequest.toString());
 				}
 				return mService.execute(mRequest);
 			
@@ -59,7 +60,10 @@ public class RpcServer {
 	 */
 	public void registerService(RpcServiceInterface service) { 
 		mServiceRegister.addService(service);
-		
+	}
+	
+	public void registerSubject(String servicename, Object subject) {
+		RpcSubscriber.BaseRpcSubscriber.registerSubject(servicename, subject);
 	}
 	
 	
@@ -68,7 +72,7 @@ public class RpcServer {
 	 * @param port
 	 */
 	public void serve(String ip, int port) {
-		RpcLog.i(TAG, mServiceRegister.listServices());
+		
 		while(true) {
 			IRpcChannel channel = RpcConnector.acceptChannel(ip, port);
 			if (channel == null) {
@@ -78,19 +82,35 @@ public class RpcServer {
 			mIsRunning = true;
 			mHandler = new RpcServerInvokerHandler();
 			mHandler.bindChannel(channel);
+			// TODO:: 做一些与回调相关的处理
+			RpcSubscriber s = null;
+			try {
+				s = (RpcSubscriber)RpcSubscriber.BaseRpcSubscriber.clone();
+			} catch (CloneNotSupportedException e) {
+				e.printStackTrace();
+				return;
+			}
+			s.onConnect(this);
+			mServiceRegister.removeService(s.list());
+			mServiceRegister.addService(s);
+			RpcLog.i(TAG, mServiceRegister.listServices());
 			run();
+			s.onDisconnect();
 		}
 	}
 	
-	public void onNotify(RpcNotification message) {
-		while (mIsRunning) {
-			if (message == null) { continue; }
+	public boolean onNotify(RpcNotification message) {
+		if (mIsRunning) {
+			if (message == null) { return false; }
 			try {
+				RpcLog.i(TAG, "notify message");
 				mHandler.invoke(new RpcInvoker(message, null, null));
+				return true;
 			} catch (InterruptedException e) {
 				RpcLog.e(RpcServer.TAG, "server is stopped because of exception:" + e);
 			}
 		}
+		return false;
 	}
 	
 	
@@ -101,7 +121,7 @@ public class RpcServer {
 				RpcInvoker invoker = mHandler.retrieve();
 				RpcRequest request = (RpcRequest)invoker.getRequest();
 				RpcServiceInterface service = (RpcServiceInterface)mServiceRegister.getService(request.getMethod());
-				RpcLog.d(TAG, "ask request: " + request.toString());
+				// RpcLog.d(TAG, "ask request: " + request.toString());
 				RpcResponse response = null;
 				if (service == null) {
 					RpcLog.e(TAG, "NO service can handle this method:" + request.getMethod());

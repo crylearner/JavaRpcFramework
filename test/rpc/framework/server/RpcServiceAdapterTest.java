@@ -12,18 +12,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import rpc.exception.RpcException;
-import rpc.framework.server.annotation.Rpc;
+import rpc.framework.server.annotation.RpcMethod;
 import rpc.json.message.RpcRequest;
 import rpc.json.message.RpcResponse;
 
 class RpcServiceAdapterTestHelper  {
 	
-	@Rpc(params={"x"})
+	@RpcMethod(params={"x"})
 	public int s1(int x) {
 		return x;
 	}
 	
-	@Rpc
+	@RpcMethod
 	public int s2() {
 		return 0;
 	}

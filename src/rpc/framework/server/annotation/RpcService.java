@@ -13,9 +13,8 @@ import java.lang.annotation.Target;
  * usage: @Rpc(params=["arg1","arg2"])
  *
  */ 
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Rpc {
-	public static final String[] NO_PARAMS = new String[]{};
-	String[] params() default {};
+public @interface RpcService {
+	String	name() default ""; //  rpc主服务名，不填表示与修饰的方法同名
 }

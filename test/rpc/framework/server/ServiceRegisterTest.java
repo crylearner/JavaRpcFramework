@@ -54,14 +54,14 @@ public class ServiceRegisterTest {
 
 	@Test
 	public final void testAddServiceStringRpcServiceInterface() {
-		ServiceRegister mSR = new ServiceRegister();
+		ServiceRegistry mSR = new ServiceRegistry();
 		mSR.addService("ServiceTest.s1", new ServiceTest());
 		assertTrue(mSR.getService("ServiceTest.s1") != null);
 	}
 
 	@Test
 	public final void testAddServiceRpcServiceInterfaceStringArray() {
-		ServiceRegister mSR = new ServiceRegister();
+		ServiceRegistry mSR = new ServiceRegistry();
 		mSR.addService(new ServiceTest(), new String[] {"s1", "s2"});
 		System.out.println(mSR.listServices());
 		assertTrue(mSR.getService("ServiceTest.s1") != null);
@@ -70,7 +70,7 @@ public class ServiceRegisterTest {
 
 	@Test
 	public final void testAddServiceRpcServiceInterface() {
-		ServiceRegister mSR = new ServiceRegister();
+		ServiceRegistry mSR = new ServiceRegistry();
 		mSR.addService(new ServiceTest());
 		System.out.println(mSR.listServices());
 		assertTrue(mSR.getService("ServiceTest.s1") != null);
@@ -79,7 +79,7 @@ public class ServiceRegisterTest {
 
 	@Test
 	public final void testRemoveService() {
-		ServiceRegister mSR = new ServiceRegister();
+		ServiceRegistry mSR = new ServiceRegistry();
 		mSR.addService(new ServiceTest());
 		System.out.println(mSR.listServices());
 		assertTrue(mSR.getService("ServiceTest.s1") != null);
